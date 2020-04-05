@@ -1,5 +1,5 @@
-var A Y K L r w C I G T gamma tau mu pi MS_P pitilde zeta wtilde;
-varexo epsA epsgamma epstau epsmu;
+var A Y K L r w C I G T tau pi MS_P pitilde wtilde zeta1 zeta2;
+varexo epsA epsG epstau;
 
 parameters alpha delta rho phi eta psi gammastar taustar;
 alpha = 0.5;
@@ -8,8 +8,8 @@ rho = 0.01;
 phi = 0.5;
 eta = 1;
 psi = 0.5;
-gammastar = 0.5;
-taustar = 0.5;
+gammastar = 0.3;
+taustar = 0.25;
 
 parameters Astar rstar K_L Y_L C_L wstar Lstar Kstar Ystar Cstar;
 Astar = 1;
@@ -23,15 +23,16 @@ Kstar = K_L * Lstar;
 Ystar = Y_L * Lstar;
 Cstar = C_L * Lstar;
 
-parameters Istar Gstar Tstar mustar pistar MS_Pstar zetastar;
+parameters Istar Gstar Tstar MS_Pstar zeta1star zeta2star pistar;
 Istar = delta * Kstar;
 Gstar = gammastar * Ystar;
 Tstar = taustar * Ystar;
 mustar = 0.01;
 pistar = 0.01;
 MS_Pstar = Tstar / rstar;
-zetastar = (1 + rstar) * MS_Pstar + Tstar;
-psi = 0.5;
+zeta1star = Gstar - Tstar + MS_Pstar;
+zeta2star = (1 + rstar) * MS_Pstar - Tstar;
+pistar = zeta1star / MS_Pstar - 1;
 
 model(linear);
 A = phi * A(-1) + epsA;
@@ -40,25 +41,23 @@ r = A + (alpha - 1) * K + (1-alpha) * L;
 w = A + alpha * K - alpha * L;
 Y = (Cstar * C + Istar * I + Gstar * G) / Ystar;
 K = (1 - delta) * K(-1) + delta * I(-1);
-G = gamma + Y;
+G = phi * G(-1) + epsG;
 T = tau + Y;
-gamma = phi * gamma(-1) + epsgamma;
 tau = phi * tau(-1) + epstau;
 wtilde = C + eta * L;
-C(+1) - C = rstar / (rstar - delta + 1) * r(+1);
-mu = phi * mu(-1) + epsmu;
-MS_P = mustar / (1 + mustar) * mu(-1) - pistar / (1 + pistar) * pi(-1) + MS_P(-1);
-pistar / (1 + pistar) * pitilde = mustar / (1 + mustar) * mu + MS_P - zeta;
-zeta = (1 + rstar) * MS_Pstar / zetastar * (rstar / (1 + rstar) * r + MS_P) + Tstar / zetastar * T;
-pistar / (1 + pistar) * pi = psi * pistar / (1 + pistar) * pi(-1) + (1 - psi) * pistar / (1 + pistar) * pitilde;
-w = pistar / (1 + pistar) * pi(-1) - pistar / (1 + pistar) * pitilde(-1) + wtilde;
+C(+1) - C = rstar * r(+1) / (rstar - delta + 1);
+MS_P(+1) = zeta1 - pistar * pi / (1 + pistar);
+pistar * pitilde / (1 + pistar) = zeta1 - zeta2;
+zeta1 = (Gstar * G - Tstar * T + MS_Pstar * MS_P) / zeta1star;
+zeta2 = ((1 + rstar) * MS_Pstar * (rstar * r / (1 + rstar) + MS_P) - Tstar * T) / zeta2star;
+pi = psi * pi(-1) + (1 - psi) * pitilde;
+w = pistar * pi(-1) / (1 + pistar) - pistar * pitilde(-1) / (1 + pistar) + wtilde;
 end;
 
 shocks;
 var epsA = 0.01;
-var epsgamma = 0.01;
+var epsG = 0.01;
 var epstau = 0.01;
-var epsmu = 0.01;
 end;
 
 stoch_simul Y K L r w C I pi;
